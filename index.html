@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="My Tasks">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4CAF50">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            padding-bottom: env(safe-area-inset-bottom);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 300;
+        }
+        
+        .input-section {
+            padding: 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #taskInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+        }
+        
+        #taskInput:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        #addBtn {
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            -webkit-appearance: none;
+            touch-action: manipulation;
+        }
+        
+        #addBtn:hover {
+            background: #45a049;
+        }
+        
+        #addBtn:active {
+            transform: scale(0.98);
+        }
+        
+        .filter-section {
+            padding: 15px 20px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            -webkit-appearance: none;
+            touch-action: manipulation;
+        }
+        
+        .filter-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .filter-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .stats {
+            margin-left: auto;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .task-list {
+            padding: 20px;
+            min-height: 200px;
+            max-height: 60vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-style: italic;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+        
+        .task-item:hover {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .task-item.completed {
+            opacity: 0.7;
+        }
+        
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .edit-btn, .delete-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.3s;
+            -webkit-appearance: none;
+            touch-action: manipulation;
+        }
+        
+        .edit-btn {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #f44336;
+            color: white;
+        }
+        
+        .edit-btn:hover, .delete-btn:hover {
+            opacity: 0.8;
+        }
+        
+        .edit-btn:active, .delete-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .edit-input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #2196F3;
+            border-radius: 3px;
+            font-size: 16px;
+            margin-right: 10px;
+            -webkit-appearance: none;
+        }
+        
+        .clear-section {
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+        
+        .clear-btn {
+            padding: 10px 20px;
+            background: #ff5722;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            -webkit-appearance: none;
+            touch-action: manipulation;
+        }
+        
+        .clear-btn:hover {
+            background: #e64a19;
+        }
+        
+        .clear-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* iOS specific styles */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+            
+            .container {
+                margin-bottom: 20px;
+            }
+        }
+        
+        /* Offline indicator */
+        .offline-indicator {
+            background: #ff5722;
+            color: white;
+            padding: 5px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .offline .offline-indicator {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-indicator">You're offline - changes will sync when reconnected</div>
+    
+    <div class="container">
+        <header>
+            <h1>📝 My Tasks</h1>
+        </header>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="taskInput" 
+                    placeholder="Add a new task..."
+                    autocomplete="off"
+                    autocapitalize="sentences"
+                >
+                <button id="addBtn">Add Task</button>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="active">Active</button>
+            <button class="filter-btn" data-filter="completed">Completed</button>
+            <span class="stats" id="stats">0 tasks</span>
+        </div>
+        
+        <div class="task-list" id="taskList">
+            <div class="empty-state">No tasks yet. Add one above!</div>
+        </div>
+        
+        <div class="clear-section" style="display: none;" id="clearSection">
+            <button class="clear-btn" id="clearCompleted">Clear Completed</button>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <span id="installPrompt" style="display: none;">
+            <button onclick="installApp()" style="background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">Install App</button>
+            <br><br>
+        </span>
+        Data is saved locally on this device
+    </div>
+
+    <script>
+        // Register service worker for offline functionality
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('Service Worker registered');
+            }).catch(err => {
+                console.log('Service Worker registration failed');
+            });
+        }
+        
+        // Handle offline/online states
+        window.addEventListener('online', () => {
+            document.body.classList.remove('offline');
+        });
+        
+        window.addEventListener('offline', () => {
+            document.body.classList.add('offline');
+        });
+        
+        // PWA install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').style.display = 'inline';
+        });
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                });
+            }
+        }
+        
+        // Task Manager Application
+        class TaskManager {
+            constructor() {
+                this.tasks = [];
+                this.currentFilter = 'all';
+                this.editingId = null;
+                
+                // Load tasks from localStorage
+                this.loadTasks();
+                
+                // Set up event listeners
+                this.setupEventListeners();
+                
+                // Initial render
+                this.render();
+            }
+            
+            setupEventListeners() {
+                // Add task
+                document.getElementById('addBtn').addEventListener('click', () => this.addTask());
+                document.getElementById('taskInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+                
+                // Filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.currentFilter = e.target.dataset.filter;
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.render();
+                    });
+                });
+                
+                // Clear completed
+                document.getElementById('clearCompleted').addEventListener('click', () => {
+                    this.tasks = this.tasks.filter(task => !task.completed);
+                    this.saveTasks();
+                    this.render();
+                });
+            }
+            
+            addTask() {
+                const input = document.getElementById('taskInput');
+                const text = input.value.trim();
+                
+                if (text === '') return;
+                
+                const task = {
+                    id: Date.now(),
+                    text: text,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+                
+                this.tasks.unshift(task);
+                this.saveTasks();
+                this.render();
+                
+                input.value = '';
+                input.focus();
+            }
+            
+            toggleTask(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (task) {
+                    task.completed = !task.completed;
+                    this.saveTasks();
+                    this.render();
+                }
+            }
+            
+            deleteTask(id) {
+                this.tasks = this.tasks.filter(t => t.id !== id);
+                this.saveTasks();
+                this.render();
+            }
+            
+            startEdit(id) {
+                this.editingId = id;
+                this.render();
+            }
+            
+            saveEdit(id, newText) {
+                const task = this.tasks.find(t => t.id === id);
+                if (task && newText.trim() !== '') {
+                    task.text = newText.trim();
+                    this.saveTasks();
+                }
+                this.editingId = null;
+                this.render();
+            }
+            
+            cancelEdit() {
+                this.editingId = null;
+                this.render();
+            }
+            
+            getFilteredTasks() {
+                switch (this.currentFilter) {
+                    case 'active':
+                        return this.tasks.filter(t => !t.completed);
+                    case 'completed':
+                        return this.tasks.filter(t => t.completed);
+                    default:
+                        return this.tasks;
+                }
+            }
+            
+            updateStats() {
+                const total = this.tasks.length;
+                const completed = this.tasks.filter(t => t.completed).length;
+                const active = total - completed;
+                
+                let statsText = `${total} task${total !== 1 ? 's' : ''}`;
+                if (total > 0) {
+                    statsText += ` (${active} active, ${completed} completed)`;
+                }
+                
+                document.getElementById('stats').textContent = statsText;
+                
+                // Show/hide clear completed button
+                const clearSection = document.getElementById('clearSection');
+                clearSection.style.display = completed > 0 ? 'block' : 'none';
+            }
+            
+            render() {
+                const taskList = document.getElementById('taskList');
+                const filteredTasks = this.getFilteredTasks();
+                
+                if (this.tasks.length === 0) {
+                    taskList.innerHTML = '<div class="empty-state">No tasks yet. Add one above!</div>';
+                } else if (filteredTasks.length === 0) {
+                    taskList.innerHTML = `<div class="empty-state">No ${this.currentFilter} tasks</div>`;
+                } else {
+                    taskList.innerHTML = filteredTasks.map(task => {
+                        if (this.editingId === task.id) {
+                            return `
+                                <div class="task-item">
+                                    <input 
+                                        type="text" 
+                                        class="edit-input" 
+                                        value="${task.text}"
+                                        onkeypress="if(event.key==='Enter') taskManager.saveEdit(${task.id}, this.value)"
+                                        onblur="taskManager.saveEdit(${task.id}, this.value)"
+                                        autofocus
+                                    >
+                                    <button class="edit-btn" onclick="taskManager.saveEdit(${task.id}, this.previousElementSibling.value)">Save</button>
+                                    <button class="delete-btn" onclick="taskManager.cancelEdit()">Cancel</button>
+                                </div>
+                            `;
+                        }
+                        
+                        return `
+                            <div class="task-item ${task.completed ? 'completed' : ''}">
+                                <input 
+                                    type="checkbox" 
+                                    class="task-checkbox"
+                                    ${task.completed ? 'checked' : ''}
+                                    onchange="taskManager.toggleTask(${task.id})"
+                                >
+                                <span class="task-text">${this.escapeHtml(task.text)}</span>
+                                <div class="task-actions">
+                                    <button class="edit-btn" onclick="taskManager.startEdit(${task.id})">Edit</button>
+                                    <button class="delete-btn" onclick="taskManager.deleteTask(${task.id})">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                this.updateStats();
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            saveTasks() {
+                try {
+                    localStorage.setItem('tasks', JSON.stringify(this.tasks));
+                } catch (e) {
+                    console.log('Tasks saved in memory only');
+                }
+            }
+            
+            loadTasks() {
+                try {
+                    const saved = localStorage.getItem('tasks');
+                    if (saved) {
+                        this.tasks = JSON.parse(saved);
+                    }
+                } catch (e) {
+                    this.tasks = [];
+                }
+            }
+        }
+        
+        // Initialize the app
+        const taskManager = new TaskManager();
+    </script>
+</body>
+</html>
